@@ -1,0 +1,1 @@
+exports.BUILD_DIR = '../../build/contracts'
