@@ -102,9 +102,44 @@
           <h1 class="title">
             AirDrop application
           </h1>
-          <h2 class="subtitle">
-            Primary subtitle
-          </h2>
+          
+          <div v-if="web3 && airDropAddress && airDropContract && tokenAddress">
+            <h2 class="subtitle">
+              airDrop address: {{ airDropAddress }}
+            </h2>
+
+            <div class="field">
+              <div class="control">
+                <input class="input" v-model="airDropToAddress" placeholder="Please enter airDrop to address">
+                <input class="input" v-model="airDropValue" placeholder="Please enter airDrop value">
+                <p>AirDrop to address: {{ airDropToAddress }} value: {{ airDropValue }}</p>
+              </div>
+
+              <div class="control">
+                <button class="button" v-on:click="airDropToken">AirDrop</button>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="web3">
+            <h2 class="subtitle">
+              deploy airDrop on ganache-cli
+            </h2>
+            <div class="field has-addons">
+              <div class="control">
+                <!-- due to always return out of gas, just enter the address -->
+                <!-- <button class="button" v-on:click="deployAirDrop">Deploy</button> -->
+                <input class="input" v-model="airDropAddress" placeholder="Please enter airDrop address">
+                <button class="button" v-on:click="checkAirDrop">Check</button>
+              </div>
+            </div>
+          </div>
+
+          <div v-else>
+            <h2 class="subtitle">
+              connect to web3 first
+            </h2>
+          </div>
         </div>
       </div>
     </section>
@@ -150,6 +185,8 @@ export default {
       allowanceAddressFrom: '',
       allowanceAddressTo: '',
       allowance: 0,
+      airDropToAddress: '',
+      airDropValue: 10
     }
   },
   created () {
@@ -243,6 +280,40 @@ export default {
         const allowance = this.tokenContract.allowance.call(addressFrom, addressTo)
 
         this.allowance = allowance
+      } catch (err) {
+        this.alert(err.message, 'is-danger')
+      }
+    },
+    // deployAirDrop () {
+    // },
+    checkAirDrop () {
+      try {
+        const airDropContract = this.web3.eth.contract(this.airDropAbi).at(this.airDropAddress)
+
+        this.airDropContract = airDropContract
+      } catch (err) {
+        this.alert(err.message, 'is-danger')
+      }
+    },
+    airDropToken () {
+
+      try {
+        const addresses = this.airDropToAddress.split(',').map(function (address) {
+          return address.trim()
+        })
+
+        if (addresses.length <= 0) {
+          throw new Error('Please using , to separate each address.')
+        }
+        if (this.airDropValue == 0) {
+          throw new Error('Please airdrop value must be bigger than 0.')
+        }
+        if (this.airDropValue * addresses.length > 20) {
+          throw new Error('Please airdrop value * airdrop address length must be smaller than 20.')
+        }
+        const txId = this.airDropContract.airDrop(this.tokenAddress, this.accounts[0].address, addresses, this.airDropValue, { from:  this.accounts[0].address, gas: '0x47EB48'})
+
+        this.alert('Airdrop token success, tx id: ' + txId, 'is-danger')
       } catch (err) {
         this.alert(err.message, 'is-danger')
       }
