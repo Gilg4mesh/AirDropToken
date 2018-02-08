@@ -37,4 +37,25 @@ contract('AirDrop', function(accounts) {
       assert.equal(balance.valueOf(), 10, "10 Fun Token wasn't in the third account");
     });
   });
+
+  it("prepare for demo airdrop function", function() {
+    var token;
+    var airdrop;
+
+    return FunToken.new(10000, 'Fun Token', 1, 'FT', {from: firstAccount}).then(function(tokenInstance) {
+      token = tokenInstance;
+      console.log('      Demo FunToken Address: ' + tokenInstance.address);
+
+      return AirDrop.new({from: firstAccount});
+    }).then(function (airDropInstance) {
+      airdrop = airDropInstance;
+      console.log('      Demo Airdrop Address: ' + airDropInstance.address);
+
+      return token.approve(airdrop.address, 20, {from: firstAccount});
+    }).then(function() {
+      return token.allowance.call(firstAccount, airdrop.address);
+    }).then(function (balance) {
+      assert.equal(balance.valueOf(), 20, "20 Fun Token wasn't approved");
+    });
+  });
 });
