@@ -6,9 +6,15 @@
           <h1 class="title">
             Web3
           </h1>
-          <h2 class="subtitle" v-if="web3">
-            connected
-          </h2>
+          <div  v-if="web3">
+            <h2 class="subtitle">
+              connected
+            </h2>
+            <div v-if="accounts.length > 0">
+              <p>Accounts:</p>
+              <p v-html="accounts.join('<br>')"></p>
+            </div>
+          </div>
           <div v-else>
             <h2 class="subtitle">
               not connected
@@ -74,11 +80,14 @@ export default {
       host: 'http://localhost:8545',
       tokenAbi: [],
       tokenAddress: '',
+      tokenContract: {},
       airDropAbi: [],
       airDropAddress: '',
+      AirDropContract: {},
       isAlert: false,
       alertMsg: '',
-      alertClass: ''
+      alertClass: '',
+      accounts: []
     }
   },
   created () {
@@ -93,13 +102,23 @@ export default {
       if (this.host && this.host === 'http://localhost:8545') {
         try {
           this.web3 = new Web3(new Web3.providers.HttpProvider(this.host))
-          this.alert('Web3 is connected', 'is-danger')
+          this.getAccounts()
+          this.alert('Web3 is connected, start to get accounts on ganache-cli', 'is-danger')
         } catch (err) {
           this.alert(err.message, 'is-danger')
         }
       } else {
         this.alert('Sorry, we only support localhost in demo version', 'is-danger')
       }
+    },
+    getAccounts () {
+      this.web3.eth.getAccounts(function (err, accounts) {
+        if (err) {
+          this.alert(err.message, 'is-danger')
+          return
+        }
+        this.accounts = accounts
+      }.bind(this))
     },
     alert (alertMsg, alertClass) {
       this.isAlert = true
