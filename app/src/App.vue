@@ -1,66 +1,114 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <h1>{{ msg }}</h1>
-    <h2>Essential Links</h2>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank">Twitter</a></li>
-    </ul>
-    <h2>Ecosystem</h2>
-    <ul>
-      <li><a href="http://router.vuejs.org/" target="_blank">vue-router</a></li>
-      <li><a href="http://vuex.vuejs.org/" target="_blank">vuex</a></li>
-      <li><a href="http://vue-loader.vuejs.org/" target="_blank">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank">awesome-vue</a></li>
-    </ul>
+    <section class="hero is-info">
+      <div class="hero-body">
+        <div class="container">
+          <h1 class="title">
+            Web3
+          </h1>
+          <h2 class="subtitle" v-if="web3">
+            connected
+          </h2>
+          <div v-else>
+            <h2 class="subtitle">
+              not connected
+            </h2>
+            <div>
+              <input v-model="host" placeholder="Please enter ethereum host">
+              <button class="button" v-on:click="connect">Connect</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hero is-primary">
+      <div class="hero-body">
+        <div class="container">
+          <h1 class="title">
+            Token application
+          </h1>
+          <h2 class="subtitle">
+            Primary subtitle
+          </h2>
+        </div>
+      </div>
+    </section>
+
+    <section class="hero is-danger">
+      <div class="hero-body">
+        <div class="container">
+          <h1 class="title">
+            AirDrop application
+          </h1>
+          <h2 class="subtitle">
+            Primary subtitle
+          </h2>
+        </div>
+      </div>
+    </section>
+
+    <div class="modal" v-bind:class="{ 'is-active': isAlert }">
+      <div class="modal-card" v-bind:class="alertClass">
+        <header class="modal-card-head">
+          <p class="modal-card-title">Yo Alert</p>
+          <button class="delete" aria-label="close" v-on:click="closeAlert"></button>
+        </header>
+        <section class="modal-card-body">
+          {{ alertMsg }}
+        </section>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import config from './config'
+import Web3 from 'web3'
 
 export default {
   name: 'app',
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      web3: null,
+      host: 'http://localhost:8545',
+      tokenAbi: [],
+      tokenAddress: '',
+      airDropAbi: [],
+      airDropAddress: '',
+      isAlert: false,
+      alertMsg: '',
+      alertClass: ''
     }
   },
   created () {
-    const AirDropContract = require(config.BUILD_DIR + '/contracts/AirDrop.json')
-    console.log(config, AirDropContract, config.BUILD_DIR + '/contracts/AirDrop.json')
+    const FunTokenContract = require('./contracts/FunToken.json')
+    const AirDropContract = require('./contracts/AirDrop.json')
+
+    this.tokenAbi = FunTokenContract.abi
+    this.airDropAbi = AirDropContract.abi
+  },
+  methods: {
+    connect () {
+      if (this.host && this.host === 'http://localhost:8545') {
+        try {
+          this.web3 = new Web3(new Web3.providers.HttpProvider(this.host))
+          this.alert('Web3 is connected', 'is-danger')
+        } catch (err) {
+          this.alert(err.message, 'is-danger')
+        }
+      } else {
+        this.alert('Sorry, we only support localhost in demo version', 'is-danger')
+      }
+    },
+    alert (alertMsg, alertClass) {
+      this.isAlert = true
+      this.alertMsg = alertMsg
+      this.alertClass = alertClass
+    },
+    closeAlert () {
+      this.isAlert = false
+    }
   }
 }
 </script>
-
-<style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-
-h1, h2 {
-  font-weight: normal;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
-}
-</style>
