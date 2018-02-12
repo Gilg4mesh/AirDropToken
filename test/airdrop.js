@@ -1,5 +1,6 @@
 var FunToken = artifacts.require("./FunToken.sol");
 var AirDrop = artifacts.require("./AirDrop.sol");
+var AirDropNew = artifacts.require("./AirDropNew.sol");
 
 contract('AirDrop', function(accounts) {
   var firstAccount = accounts[0];
@@ -25,6 +26,37 @@ contract('AirDrop', function(accounts) {
       assert.equal(balance.valueOf(), 20, "20 Fun Token wasn't approved");
     }).then(function() {
       return airdrop.airDrop(token.address, firstAccount, [
+        secondAccount, thirdAccount
+      ], 10, {from: forthAccount});
+    }).then(function () {
+      return token.balanceOf(secondAccount);
+    }).then(function (balance) {
+      assert.equal(balance.valueOf(), 10, "10 Fun Token wasn't in the second account");
+    }).then(function () {
+      return token.balanceOf(thirdAccount);
+    }).then(function (balance) {
+      assert.equal(balance.valueOf(), 10, "10 Fun Token wasn't in the third account");
+    });
+  });
+
+  it("should airdrop 10 FunToken to second account and third account", function() {
+    var token;
+    var airdropNew;
+
+    return FunToken.new(10000, 'Fun Token', 1, 'FT', {from: firstAccount}).then(function(tokenInstance) {
+      token = tokenInstance;
+
+      return AirDropNew.new(token.address, {from: forthAccount});
+    }).then(function (airDropInstance) {
+      airdropNew = airDropInstance;
+
+      return token.approve(airdropNew.address, 20, {from: firstAccount});
+    }).then(function() {
+      return token.allowance.call(firstAccount, airdropNew.address);
+    }).then(function (balance) {
+      assert.equal(balance.valueOf(), 20, "20 Fun Token wasn't approved");
+    }).then(function() {
+      return airdropNew.airDrop(firstAccount, [
         secondAccount, thirdAccount
       ], 10, {from: forthAccount});
     }).then(function () {
